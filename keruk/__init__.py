@@ -1,6 +1,6 @@
 """Simple Web Downloader"""
 
-__version__ = "0.0.5"
+__version__ = "0.0.6"
 __author__ = "Aditya Kelvianto Sidharta"
 
 import os
