@@ -7,6 +7,7 @@ import os
 import random
 import string
 from multiprocessing.dummy import Pool as ThreadPool
+import datetime
 
 import pandas as pd
 import requests
@@ -16,32 +17,29 @@ from loguru import logger
 
 class Keruk:
     def __init__(
-        self, timeout=3, header=None, tmp_path=None, save_path=None, use_proxy=True, num_workers=100, verbose=False
+        self, timeout=3, save_path=None, use_proxy=True, num_workers=100, verbose=False
     ):
         self.timeout = timeout
         self.use_proxy = use_proxy
         self.num_workers = num_workers
-        if header is None:
-            self.header = {"User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:67.0) Gecko/20100101 Firefox/67.0"}
-        else:
-            self.header = header
+        self.header = {"User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:67.0) Gecko/20100101 Firefox/67.0"}
         self.workdir = os.getcwd()
-        if tmp_path is None:
-            self.tmp_path = os.path.join(self.workdir, "scraper_tmp")
-            if not os.path.exists(self.tmp_path):
-                os.makedirs(self.tmp_path)
-        else:
-            self.tmp_path = tmp_path
+        self.logger = logger
+        self.verbose = verbose
+
         if save_path is None:
-            self.save_path = os.path.join(self.workdir, "scraper_final")
+            self.save_path = os.path.join(self.workdir, "keruk_result_{}".format(self._get_datetime()))
             if not os.path.exists(self.save_path):
                 os.makedirs(self.save_path)
         else:
             self.save_path = save_path
+        self.logger.info("Saving files at {}".format(self.save_path))
 
         self.ip_address, self.port, self.n_proxy = self._init_proxy()
-        self.logger = logger
-        self.verbose = verbose
+
+    @staticmethod
+    def _get_datetime():
+        return datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
     def _is_bad_proxy(self, pip):
         proxy = {"http": "http://{}".format(pip), "https": "http://{}".format(pip)}
@@ -133,7 +131,7 @@ class Keruk:
         if response is None:
             return False
         if response.status_code == 200:
-            path = os.path.join(self.tmp_path, url.translate(str.maketrans("", "", string.punctuation)))
+            path = os.path.join(self.save_path, url.translate(str.maketrans("", "", string.punctuation)))
             with open(path, "w+") as f:
                 f.write(response.text)
             return True
@@ -141,7 +139,7 @@ class Keruk:
             return False
 
     def open_url(self, url):
-        path = os.path.join(self.tmp_path, url.translate(str.maketrans("", "", string.punctuation)))
+        path = os.path.join(self.save_path, url.translate(str.maketrans("", "", string.punctuation)))
         assert os.path.exists(path)
         with open(path, "r") as f:
             response_text = f.read()
