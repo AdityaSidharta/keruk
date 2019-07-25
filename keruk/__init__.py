@@ -131,7 +131,7 @@ class Keruk:
         if response is None:
             return False
         if response.status_code == 200:
-            path = os.path.join(self.save_path, url.translate(str.maketrans("", "", string.punctuation)))
+            path = os.path.join(self.save_path, url)
             with open(path, "w+") as f:
                 f.write(response.text)
             return True
@@ -139,7 +139,7 @@ class Keruk:
             return False
 
     def open_url(self, url):
-        path = os.path.join(self.save_path, url.translate(str.maketrans("", "", string.punctuation)))
+        path = os.path.join(self.save_path, url)
         assert os.path.exists(path)
         with open(path, "r") as f:
             response_text = f.read()
