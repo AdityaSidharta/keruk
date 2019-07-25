@@ -1,6 +1,6 @@
 """Simple Web Downloader"""
 
-__version__ = '0.0.3'
+__version__ = "0.0.3"
 __author__ = "Aditya Kelvianto Sidharta"
 
 import os
@@ -11,10 +11,13 @@ from multiprocessing.dummy import Pool as ThreadPool
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
+from loguru import logger
 
 
 class Keruk:
-    def __init__(self, timeout=3, header=None, tmp_path=None, save_path=None, use_proxy=True, num_workers=100):
+    def __init__(
+        self, timeout=3, header=None, tmp_path=None, save_path=None, use_proxy=True, num_workers=100, verbose=False
+    ):
         self.timeout = timeout
         self.use_proxy = use_proxy
         self.num_workers = num_workers
@@ -37,6 +40,8 @@ class Keruk:
             self.save_path = save_path
 
         self.ip_address, self.port, self.n_proxy = self._init_proxy()
+        self.logger = logger
+        self.verbose = verbose
 
     def _is_bad_proxy(self, pip):
         proxy = {"http": "http://{}".format(pip), "https": "http://{}".format(pip)}
@@ -115,10 +120,12 @@ class Keruk:
                 response = requests.get(url, headers=self.header, proxies=self._sample_proxy(), timeout=self.timeout)
             else:
                 response = requests.get(url, headers=self.header, timeout=self.timeout)
-            print("URL : {}, STATUS_CODE : {}".format(url, response.status_code))
+            if self.verbose:
+                self.logger.info("URL : {}, STATUS_CODE : {}".format(url, response.status_code))
             return response
         except Exception as e:
-            print("URL : {}, ERROR : {}".format(url, e))
+            if self.verbose:
+                self.logger.info("URL : {}, ERROR : {}".format(url, e))
             return None
 
     def save_url(self, url):
